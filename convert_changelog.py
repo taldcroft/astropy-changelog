@@ -160,6 +160,13 @@ def read_rst(filepath, max_entries=None):
     return entries, release_dates
 
 
+def read_yaml(filepath):
+    with open(filepath, 'r') as fh:
+        instructions, template, release_dates, entries = yaml.safe_load_all(fh)
+
+    return entries, release_dates['RELEASE_DATES']
+
+
 def rst_header(text, section_char):
     if text is None:
         out = []
@@ -219,15 +226,16 @@ def write_rst(entries, filepath, release_dates):
         fh.writelines(line + os.linesep for line in lines)
 
 
-def write_yaml(entries, filepath, line_width):
+def write_yaml(entries, release_dates, filepath, line_width):
     if line_width is None:
         line_width = 100
 
     template = get_template()
     instructions = get_instructions()
+    release_dates = {'RELEASE_DATES': release_dates}
 
     with open(filepath, 'w') as fh:
-        yaml.dump_all([instructions, template, entries], fh, width=line_width)
+        yaml.dump_all([instructions, template, release_dates, entries], fh, width=line_width)
 
 
 def get_uniques(entries):
@@ -301,8 +309,7 @@ if __name__ == '__main__':
     if infile.suffix == '.rst':
         entries, release_dates = read_rst(infile, opt.max_entries)
     elif infile.suffix == '.yml':
-        with open(outfile, 'r') as fh:
-            entries = yaml.safe_load(fh)
+        entries, release_dates = read_yaml(infile)
     else:
         raise ValueError('input must be .rst or .yml')
 
@@ -311,7 +318,7 @@ if __name__ == '__main__':
     if outfile.suffix == '.rst':
         write_rst(entries, outfile, release_dates)
     elif outfile.suffix == '.yml':
-        write_yaml(entries, outfile, opt.line_width)
+        write_yaml(entries, release_dates, outfile, opt.line_width)
 
     if opt.print_info:
         print(releases)
