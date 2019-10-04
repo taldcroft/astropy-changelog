@@ -41,6 +41,9 @@ def get_options(args=None):
     parser.add_argument("--max-entries",
                         type=int,
                         help="Max number of RST entries to parse (default=None, for debug)")
+    parser.add_argument("--print-info",
+                        action='store_true',
+                        help="Print releases and subpackages")
 
     args = parser.parse_args(args)
     return args
@@ -162,6 +165,8 @@ def write_yaml(entries, filepath, line_width):
     if line_width is None:
         line_width = 100
 
+
+
     with open(filepath, 'w') as fh:
         yaml.dump(entries, fh, width=line_width)
 
@@ -193,6 +198,8 @@ if __name__ == '__main__':
     elif infile.suffix == '.yml':
         with open(outfile, 'r') as fh:
             entries = yaml.safe_load(fh)
+    else:
+        raise ValueError('input must be .rst or .yml')
 
     # Output entries to either RST or YAML.  The YAML pathway is mostly for initial
     # testing and conversion of the legacy CHANGES.RST.
@@ -200,3 +207,12 @@ if __name__ == '__main__':
         write_rst(entries, outfile)
     elif outfile.suffix == '.yml':
         write_yaml(entries, outfile, opt.line_width)
+
+    if opt.print_info:
+        uniques = get_uniques(entries)
+        for key in ('subpackages', 'releases', 'entry_types'):
+            vals = uniques[key]
+            print(key.title())
+            for val in sorted(vals):
+                print('  - ' + val)
+            print()
