@@ -167,3 +167,9 @@ RELEASE_DATES: {'0.1': '2012-06-19', 3.2.2: unreleased, '4.0': unreleased}
   releases: ['0.1']
   subpackages: [null]
   text: Initial release.
+- entry_types: [New Features, Performance Improvements]
+  pull_requests: [1000]
+  releases: ['4.0']
+  subpackages: [table]
+  text: |-
+    This is my description of the update.
