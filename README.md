@@ -37,7 +37,7 @@ The changelog YAML file contains four documents:
 - Release dates (needed to generate the RST legacy format)
 - Change entries
 
-## Envisioned process
+## Envisioned process for astropy package maintainers
 
 The envisioned process is to convert from `CHANGES.rst` to `CHANGES.yml` and
 then convert back to RST to verify that the YAML representation accurately
@@ -55,6 +55,17 @@ At this point `CHANGES.yml` becomes the official source of changes and
 ```
 ./convert_changelog.py CHANGES.yml CHANGES.rst
 ```
+
+## Process for astropy core contributors
+
+The goal is that the instructions in the `CHANGES.yml` file are clear and self-contained,
+and that merge conflicts will be avoided by always placing new change entries at the
+bottom of the file.
+
+If merge conflicts are still a problem, one can imagine hacky things like dividing the
+change entries into 100 sections based on the last two digits of the PR number.  Then
+you tell the contributor to put their new entry into the correct section, so that
+merge conflicts will be extremely unlikely.
 
 ## Example files
 
