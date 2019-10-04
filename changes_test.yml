@@ -1,0 +1,169 @@
+INSTRUCTIONS FOR ADDING A CHANGE LOG ENTRY: |
+  In order to add an entry to the astropy changelog, copy the template entry
+  (which immediately follows the --- below this text) to the BOTTOM of this
+  file.  The fill in each of the values:
+
+  entry_types: determine which of the types in the template apply to this change.
+      This maybe be just one or multiple, for instance "New Features" and
+      "Bug Fixes" are common. Enter the one or more types verbatim from the
+      template list, separated by comma.
+
+  pull_requests: enter one or more pull request numbers that relate to the change,
+      separated a comma.
+
+  releases: enter one or more releases where this change should be included.
+      Pure bug fixes may be backported to the current stable and LTS releases.
+      Enter the applicable release from the milestone list that can be found
+      at https://github.com/astropy/astropy/milestones.
+
+  subpackages: enter one or more astropy subpackages that are impacted by this
+      change, separated by a comma.  Available subpackages are:
+        config, constants, convolution, coordinates, cosmology, io.ascii, io.fits,
+        io.misc, io.registry, io.votable, logger, modeling, nddata, samp, stats,
+        table, tests, time, timeseries, uncertainty, units, utils, visualization, wcs
+
+  text: Enter description of the update here, maintaining the example indentation
+      of two spaces before the text.  Use the present tense, for instance
+      "Add a new method ``Table.cstack()`` for column-wise stacking". Enclose
+      literals in double-back ticks as shown.
+---
+entry_types: [New Features, API Changes, Performance Improvements, Bug Fixes, Other Changes]
+pull_requests: []
+releases: []
+subpackages: []
+text: |-
+  Enter description of the update here, maintaining the example indentation
+  of two spaces before the text.  Use the present tense, for instance
+  "Add a new method ``Table.cstack()`` for column-wise stacking."
+---
+RELEASE_DATES: {'0.1': '2012-06-19', 3.2.2: unreleased, '4.0': unreleased}
+---
+- entry_types: [New Features]
+  pull_requests: [8517]
+  releases: ['4.0']
+  subpackages: [constants]
+  text: |-
+    The version of constants can be specified via ScienceState in a way
+    that ``constants`` and ``units`` will be consistent. [#8517]
+- entry_types: [New Features]
+  pull_requests: [8761]
+  releases: ['4.0']
+  subpackages: [constants]
+  text: Default constants now use CODATA 2018 and IAU 2015 definitions. [#8761]
+- entry_types: [New Features]
+  pull_requests: [8767]
+  releases: ['4.0']
+  subpackages: [coordinates]
+  text: |-
+    Changed ``coordinates.solar_system_ephemeris`` to also accept local files
+    as input. The ephemeris can now be selected by either keyword (e.g. 'jpl',
+    'de430'), URL or file path. [#8767]
+- entry_types: [New Features]
+  pull_requests: [8857]
+  releases: ['4.0']
+  subpackages: [coordinates]
+  text: |-
+    Added a ``cylindrical`` property to ``SkyCoord`` for shorthand access to a
+    ``CylindricalRepresentation`` of the coordinate, as is already available
+    for other common representations. [#8857]
+- entry_types: [New Features]
+  pull_requests: [8902]
+  releases: ['4.0']
+  subpackages: [table]
+  text: |-
+    Improved the implementation of ``Table.replace_column()`` to provide
+    a speed-up of 5 to 10 times for wide tables.  The method can now accept
+    any input which convertible to a column of the correct length, not just
+    ``Column`` subclasses.[#8902]
+- entry_types: [New Features]
+  pull_requests: [8933]
+  releases: ['4.0']
+  subpackages: [table]
+  text: |-
+    Improved the implementation of ``Table.add_column()`` to provide a speed-up
+    of 2 to 10 (or more) when adding a column to tables, with increasing benefit
+    as the number of columns increases.  The method can now accept any input
+    which is convertible to a column of the correct length, not just ``Column``
+    subclasses. [#8933]
+- entry_types: [Bug Fixes]
+  pull_requests: [9048]
+  releases: ['4.0']
+  subpackages: [table]
+  text: |-
+    Fix bug where adding a column consisting of a list of masked arrays was
+    dropping the masks. [#9048]
+- entry_types: [Bug Fixes]
+  pull_requests: [9015]
+  releases: ['4.0']
+  subpackages: [table]
+  text: |-
+    ``Quantity`` columns with custom units can now round-trip via FITS tables,
+    as long as the custom unit is enabled during reading (otherwise, the unit
+    will become an ``UnrecognizedUnit``). [#9015]
+- entry_types: [Bug Fixes]
+  pull_requests: [9237]
+  releases: ['4.0']
+  subpackages: [utils]
+  text: |-
+    For the default ``IERS_Auto`` table, which combines IERS A and B values, the
+    IERS nutation parameters "dX_2000A" and "dY_2000A" are now also taken from
+    the actual IERS B file rather than from the B values stored in the IERS A
+    file.  Any differences should be negligible for any practical application,
+    but this may help exactly reproducing results. [#9237]
+- entry_types: [Other Changes and Additions]
+  pull_requests: [8955]
+  releases: ['4.0']
+  subpackages: [null]
+  text: Versions of Python <3.6 are no longer supported. [#8955]
+- entry_types: [Other Changes and Additions]
+  pull_requests: [8787]
+  releases: ['4.0']
+  subpackages: [null]
+  text: Matplotlib 2.1 and later is now required. [#8787]
+- entry_types: [Other Changes and Additions]
+  pull_requests: [9233]
+  releases: ['4.0']
+  subpackages: [null]
+  text: |-
+    Updated the bundled CFITSIO library to 3.470. See
+    ``cextern/cfitsio/docs/changes.txt`` for additional information. [#9233]
+- entry_types: [Bug fixes]
+  pull_requests: [8877]
+  releases: [3.2.2]
+  subpackages: [coordinates]
+  text: |-
+    Fix concatenation of representations for cases where the units were different.
+    [#8877]
+- entry_types: [Bug fixes]
+  pull_requests: [9007]
+  releases: [3.2.2]
+  subpackages: [coordinates]
+  text: |-
+    Check for NaN values in catalog and match coordinates before building and
+    querying the ``KDTree`` for coordinate matching. [#9007]
+- entry_types: [Bug fixes]
+  pull_requests: [9008]
+  releases: [3.2.2]
+  subpackages: [coordinates]
+  text: Fix sky coordinate matching when a dimensionless distance is provided. [#9008]
+- entry_types: [Bug fixes]
+  pull_requests: [9118]
+  releases: [3.2.2]
+  subpackages: [nddata]
+  text: |-
+    Fix to ``add_array``, which now accepts ``array_small`` having dimensions
+    equal to ``array_large``, instead of only allowing smaller sizes of
+    arrays. [#9118]
+- entry_types: [Other Changes and Additions]
+  pull_requests: [9039]
+  releases: [3.2.2]
+  subpackages: [null]
+  text: |-
+    Fixed a bug that caused files outside of the astropy module directory to be
+    included as package data, resulting in some cases in errors when doing
+    repeated builds. [#9039]
+- entry_types: [null]
+  pull_requests: []
+  releases: ['0.1']
+  subpackages: [null]
+  text: Initial release.
