@@ -1,10 +1,20 @@
-# astropy-changelog
-Utility for managing the astropy changelog (demo)
+# astropy-changelog: utility for managing the astropy changelog (demo)
 
 This is a proof of concept for changing the basis of the astropy changelog from
 the `CHANGES.rst` file to a new `CHANGES.yml` file.  The driver for this and initial
 discussions were captured in an astropy-dev email thread in Oct 2016 (subject
 "Proposal for a new changelog system").
+
+An important point to note is that the current code strives to maintain
+smooth compatibility with the current `CHANGES.rst` as a source for
+users and developers to understand astropy changes.  
+
+**However**, once
+we have transitioned to a YAML structured representation then there 
+are numerous possibilities for using this far more effectively and
+providing much better ways to present and discover this information.
+
+## Overview
 
 The key element of this POC is the script `convert_changelog.py`.  It can handle
 the following:
