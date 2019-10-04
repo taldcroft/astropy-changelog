@@ -3,20 +3,57 @@ import argparse
 import re
 from collections import defaultdict
 from pathlib import Path
+from pprint import pprint
 
 import yaml
 
-ENTRY_TYPES = ('New Features',
-               'API Changes', 'API changes',
-               'Performance Improvements',
-               'Bug Fixes', 'Bug fixes',
-               'Miscellaneous',
-               'General',
-               'Other Changes and Additions',
-               None)
+# This is the set of entry_type values from the astropy CHANGES.rst as of 4.0
+LEGACY_ENTRY_TYPES = [
+    'New Features',
+    'API Changes', 'API changes',
+    'Performance Improvements',
+    'Bug Fixes', 'Bug fixes',
+    'Miscellaneous',
+    'General',
+    'Other Changes and Additions',
+    None]
 
+# Allowed entry types for non-legacy entries
+ENTRY_TYPES = [
+    'New Features',
+    'API Changes',
+    'Performance Improvements',
+    'Bug Fixes',
+    'Other Changes']
 
-yaml.Dumper.ignore_aliases = lambda *args : True
+# Recommended subpackages
+SUBPACKAGES = [
+    'astropy.config',
+    'astropy.constants',
+    'astropy.convolution',
+    'astropy.coordinates',
+    'astropy.cosmology',
+    'astropy.io.ascii',
+    'astropy.io.fits',
+    'astropy.io.misc',
+    'astropy.io.registry',
+    'astropy.io.votable',
+    'astropy.logger',
+    'astropy.modeling',
+    'astropy.nddata',
+    'astropy.samp',
+    'astropy.stats',
+    'astropy.table',
+    'astropy.tests',
+    'astropy.time',
+    'astropy.timeseries',
+    'astropy.uncertainty',
+    'astropy.units',
+    'astropy.utils',
+    'astropy.visualization',
+    'astropy.wcs']
+
+yaml.Dumper.ignore_aliases = lambda *args: True
 
 
 def str_presenter(dumper, data):
@@ -80,6 +117,7 @@ def read_rst(filepath, max_entries=None):
     entry_lines = []
     entries = []
     within_entry = False
+    release_dates = {}
 
     for line, line_next in zip(lines, lines[1:]):
         if within_entry or line.startswith('- '):
@@ -95,10 +133,23 @@ def read_rst(filepath, max_entries=None):
                 entry_lines.clear()
 
         elif re.match(r'[\^]+\s*$', line_next):
+            if line.startswith('astropy.'):
+                line = line[8:]
             config['subpackages'] = [line.strip()]
 
         elif re.match(r'[=]+\s*$', line_next):
-            config['releases'] = [line.strip()]
+            match = re.match(r'(\S+)'
+                             r'\s+'
+                             r'\('
+                             r'( [^)]+ )'
+                             r'\)', line, re.VERBOSE)
+            if not match:
+                raise ValueError('could not parse release')
+            release = match.group(1)
+            date = match.group(2)
+            release_dates[release] = date
+
+            config['releases'] = [release]
             config['subpackages'] = [None]
             config['entry_types'] = [None]
 
@@ -106,7 +157,7 @@ def read_rst(filepath, max_entries=None):
             config['entry_types'] = [line.strip()]
             config['subpackages'] = [None]
 
-    return entries
+    return entries, release_dates
 
 
 def rst_header(text, section_char):
@@ -117,7 +168,7 @@ def rst_header(text, section_char):
     return out
 
 
-def write_rst(entries, filepath):
+def write_rst(entries, filepath, release_dates):
     out = {}
     for entry in entries:
         text = entry['text']
@@ -139,9 +190,12 @@ def write_rst(entries, filepath):
 
     lines = []
     for release in reversed(sorted(out)):
-        lines.extend(rst_header(release, '='))
+        release = str(release)
+        release_date = release_dates[release]
+        release_text = f'{release} ({release_date})'
+        lines.extend(rst_header(release_text, '='))
 
-        for entry_type in ENTRY_TYPES:
+        for entry_type in LEGACY_ENTRY_TYPES:
             if entry_type not in out[release]:
                 continue
 
@@ -150,7 +204,11 @@ def write_rst(entries, filepath):
             if subpackages is None:
                 print(release)
             for subpackage in subpackages:
-                lines.extend(rst_header(subpackage, '^'))
+                if subpackage not in ('Installation', 'Misc', None):
+                    subpackage_text = f'astropy.{subpackage}'
+                else:
+                    subpackage_text = subpackage
+                lines.extend(rst_header(subpackage_text, '^'))
                 for text in out[release][entry_type][subpackage]:
                     for ii, text_line in enumerate(text.splitlines()):
                         hdr = '- ' if ii == 0 else '  '
@@ -165,10 +223,11 @@ def write_yaml(entries, filepath, line_width):
     if line_width is None:
         line_width = 100
 
-
+    template = get_template()
+    instructions = get_instructions()
 
     with open(filepath, 'w') as fh:
-        yaml.dump(entries, fh, width=line_width)
+        yaml.dump_all([instructions, template, entries], fh, width=line_width)
 
 
 def get_uniques(entries):
@@ -183,6 +242,52 @@ def get_uniques(entries):
     return uniques
 
 
+def get_template():
+    out = {'entry_types': ENTRY_TYPES,
+           'pull_requests': [],
+           'releases': [],
+           'subpackages': [],
+           'text': ('Enter description of the update here, maintaining the example indentation\n'
+                    'of two spaces before the text.  Use the present tense, for instance\n'
+                    '"Add a new method ``Table.cstack()`` for column-wise stacking."')
+           }
+    return out
+
+
+def get_instructions():
+    text = """\
+In order to add an entry to the astropy changelog, copy the template entry
+(which immediately follows the --- below this text) to the BOTTOM of this
+file.  The fill in each of the values:
+
+entry_types: determine which of the types in the template apply to this change.
+    This maybe be just one or multiple, for instance "New Features" and
+    "Bug Fixes" are common. Enter the one or more types verbatim from the
+    template list, separated by comma.
+
+pull_requests: enter one or more pull request numbers that relate to the change,
+    separated a comma.
+
+releases: enter one or more releases where this change should be included.
+    Pure bug fixes may be backported to the current stable and LTS releases.
+    Enter the applicable release from the milestone list that can be found
+    at https://github.com/astropy/astropy/milestones.
+
+subpackages: enter one or more astropy subpackages that are impacted by this
+    change, separated by a comma.  Available subpackages are:
+      config, constants, convolution, coordinates, cosmology, io.ascii, io.fits,
+      io.misc, io.registry, io.votable, logger, modeling, nddata, samp, stats,
+      table, tests, time, timeseries, uncertainty, units, utils, visualization, wcs
+
+text: Enter description of the update here, maintaining the example indentation
+    of two spaces before the text.  Use the present tense, for instance
+    "Add a new method ``Table.cstack()`` for column-wise stacking". Enclose
+    literals in double-back ticks as shown.
+"""
+    out = {'INSTRUCTIONS FOR ADDING A CHANGE LOG ENTRY': text}
+    return out
+
+
 if __name__ == '__main__':
     opt = get_options()
     infile = Path(opt.infile)
@@ -194,7 +299,7 @@ if __name__ == '__main__':
     # Input entries from either RST or YAML. The RST pathway is mostly for initial
     # testing and conversion of the legacy CHANGES.RST.
     if infile.suffix == '.rst':
-        entries = read_rst(infile, opt.max_entries)
+        entries, release_dates = read_rst(infile, opt.max_entries)
     elif infile.suffix == '.yml':
         with open(outfile, 'r') as fh:
             entries = yaml.safe_load(fh)
@@ -204,15 +309,16 @@ if __name__ == '__main__':
     # Output entries to either RST or YAML.  The YAML pathway is mostly for initial
     # testing and conversion of the legacy CHANGES.RST.
     if outfile.suffix == '.rst':
-        write_rst(entries, outfile)
+        write_rst(entries, outfile, release_dates)
     elif outfile.suffix == '.yml':
         write_yaml(entries, outfile, opt.line_width)
 
     if opt.print_info:
+        print(releases)
         uniques = get_uniques(entries)
         for key in ('subpackages', 'releases', 'entry_types'):
             vals = uniques[key]
             print(key.title())
-            for val in sorted(vals):
-                print('  - ' + val)
+            for val in vals:
+                print('  - ' + str(val))
             print()
