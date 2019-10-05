@@ -1,40 +1,40 @@
 INSTRUCTIONS FOR ADDING A CHANGE LOG ENTRY: |
   In order to add an entry to the astropy changelog, copy the template entry
-  (which immediately follows the --- below this text) to the BOTTOM of this
-  file.  The fill in each of the values:
+  (which immediately follows the --- below this text) to a quasi-random location
+  of this file (NOT the top or bottom).  The fill in each of the values:
 
   entry_types: determine which of the types in the template apply to this change.
-      This maybe be just one or multiple, for instance "New Features" and
-      "Bug Fixes" are common. Enter the one or more types verbatim from the
-      template list, separated by comma.
+  This maybe be just one or multiple, for instance "New Features" and
+  "Bug Fixes" are common. Enter the one or more types verbatim from the
+  template list, separated by comma.
 
   pull_requests: enter one or more pull request numbers that relate to the change,
-      separated a comma.
+  separated a comma.
 
   releases: enter one or more releases where this change should be included.
-      Pure bug fixes may be backported to the current stable and LTS releases.
-      Enter the applicable release from the milestone list that can be found
-      at https://github.com/astropy/astropy/milestones.
+  Pure bug fixes may be backported to the current stable and LTS releases.
+  Enter the applicable release from the milestone list that can be found
+  at https://github.com/astropy/astropy/milestones.
 
   subpackages: enter one or more astropy subpackages that are impacted by this
-      change, separated by a comma.  Available subpackages are:
-        config, constants, convolution, coordinates, cosmology, io.ascii, io.fits,
-        io.misc, io.registry, io.votable, logger, modeling, nddata, samp, stats,
-        table, tests, time, timeseries, uncertainty, units, utils, visualization, wcs
+  change, separated by a comma.  Available subpackages are:
+    config, constants, convolution, coordinates, cosmology, io.ascii, io.fits,
+    io.misc, io.registry, io.votable, logger, modeling, nddata, samp, stats,
+    table, tests, time, timeseries, uncertainty, units, utils, visualization, wcs
 
   text: Enter description of the update here, maintaining the example indentation
-      of two spaces before the text.  Use the present tense, for instance
-      "Add a new method ``Table.cstack()`` for column-wise stacking". Enclose
-      literals in double-back ticks as shown.
+  of two spaces before the text.  Use the past tense, for instance
+  "Added a new method ``Table.cstack()`` for column-wise stacking". Enclose
+  literals in double-back ticks as shown.
 ---
-entry_types: [New Features, API Changes, Performance Improvements, Bug Fixes, Other Changes]
-pull_requests: []
-releases: []
-subpackages: []
-text: |-
-  Enter description of the update here, maintaining the example indentation
-  of two spaces before the text.  Use the present tense, for instance
-  "Add a new method ``Table.cstack()`` for column-wise stacking."
+- entry_types: [New Features, API Changes, Performance Improvements, Bug Fixes, Other Changes]
+  pull_requests: []
+  releases: []
+  subpackages: []
+  text: |-
+    Enter description of the update here, maintaining the example indentation
+    of two spaces before the text.  Use the past tense, for instance
+    "Added a new method ``Table.cstack()`` for column-wise stacking."
 ---
 RELEASE_DATES: {'0.1': '2012-06-19', 3.2.2: unreleased, '4.0': unreleased}
 ---

@@ -54,6 +54,46 @@ SUBPACKAGES = [
     'astropy.visualization',
     'astropy.wcs']
 
+INSTRUCTIONS = """\
+In order to add an entry to the astropy changelog, copy the template entry
+(which immediately follows the --- below this text) to a quasi-random location
+of this file (NOT the top or bottom).  The fill in each of the values:
+
+entry_types: determine which of the types in the template apply to this change.
+This maybe be just one or multiple, for instance "New Features" and
+"Bug Fixes" are common. Enter the one or more types verbatim from the
+template list, separated by comma.
+
+pull_requests: enter one or more pull request numbers that relate to the change,
+separated a comma.
+
+releases: enter one or more releases where this change should be included.
+Pure bug fixes may be backported to the current stable and LTS releases.
+Enter the applicable release from the milestone list that can be found
+at https://github.com/astropy/astropy/milestones.
+
+subpackages: enter one or more astropy subpackages that are impacted by this
+change, separated by a comma.  Available subpackages are:
+  config, constants, convolution, coordinates, cosmology, io.ascii, io.fits,
+  io.misc, io.registry, io.votable, logger, modeling, nddata, samp, stats,
+  table, tests, time, timeseries, uncertainty, units, utils, visualization, wcs
+
+text: Enter description of the update here, maintaining the example indentation
+of two spaces before the text.  Use the past tense, for instance
+"Added a new method ``Table.cstack()`` for column-wise stacking". Enclose
+literals in double-back ticks as shown.
+"""
+
+ENTRY_TEMPLATE = {
+    'entry_types': ENTRY_TYPES,
+    'pull_requests': [],
+    'releases': [],
+    'subpackages': [],
+    'text': ('Enter description of the update here, maintaining the example indentation\n'
+             'of two spaces before the text.  Use the past tense, for instance\n'
+             '"Added a new method ``Table.cstack()`` for column-wise stacking."')
+}
+
 yaml.Dumper.ignore_aliases = lambda *args: True
 
 
@@ -226,12 +266,13 @@ def write_yaml(entries, release_dates, filepath, line_width):
     if line_width is None:
         line_width = 100
 
-    template = get_template()
-    instructions = get_instructions()
+    template = [ENTRY_TEMPLATE]
+    instructions = {'INSTRUCTIONS FOR ADDING A CHANGE LOG ENTRY': INSTRUCTIONS}
     release_dates = {'RELEASE_DATES': release_dates}
 
     with open(filepath, 'w') as fh:
-        yaml.dump_all([instructions, template, release_dates, entries], fh, width=line_width)
+        documents = [instructions, template, release_dates, entries]
+        yaml.dump_all(documents, fh, width=line_width)
 
 
 def get_uniques(entries):
@@ -244,52 +285,6 @@ def get_uniques(entries):
                     uniques[key].add(val)
 
     return uniques
-
-
-def get_template():
-    out = {'entry_types': ENTRY_TYPES,
-           'pull_requests': [],
-           'releases': [],
-           'subpackages': [],
-           'text': ('Enter description of the update here, maintaining the example indentation\n'
-                    'of two spaces before the text.  Use the present tense, for instance\n'
-                    '"Add a new method ``Table.cstack()`` for column-wise stacking."')
-           }
-    return out
-
-
-def get_instructions():
-    text = """\
-In order to add an entry to the astropy changelog, copy the template entry
-(which immediately follows the --- below this text) to the BOTTOM of this
-file.  The fill in each of the values:
-
-entry_types: determine which of the types in the template apply to this change.
-    This maybe be just one or multiple, for instance "New Features" and
-    "Bug Fixes" are common. Enter the one or more types verbatim from the
-    template list, separated by comma.
-
-pull_requests: enter one or more pull request numbers that relate to the change,
-    separated a comma.
-
-releases: enter one or more releases where this change should be included.
-    Pure bug fixes may be backported to the current stable and LTS releases.
-    Enter the applicable release from the milestone list that can be found
-    at https://github.com/astropy/astropy/milestones.
-
-subpackages: enter one or more astropy subpackages that are impacted by this
-    change, separated by a comma.  Available subpackages are:
-      config, constants, convolution, coordinates, cosmology, io.ascii, io.fits,
-      io.misc, io.registry, io.votable, logger, modeling, nddata, samp, stats,
-      table, tests, time, timeseries, uncertainty, units, utils, visualization, wcs
-
-text: Enter description of the update here, maintaining the example indentation
-    of two spaces before the text.  Use the present tense, for instance
-    "Add a new method ``Table.cstack()`` for column-wise stacking". Enclose
-    literals in double-back ticks as shown.
-"""
-    out = {'INSTRUCTIONS FOR ADDING A CHANGE LOG ENTRY': text}
-    return out
 
 
 if __name__ == '__main__':
