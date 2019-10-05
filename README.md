@@ -13,6 +13,10 @@ users and developers to understand astropy changes.
 we have transitioned to a YAML structured representation then there 
 are numerous possibilities for using this far more effectively and
 providing much better ways to present and discover this information.
+One simple idea is to break up the output RST file by version, e.g.
+`CHANGES-4.0.rst`, `CHANGES-3.2.1.rst`, and so on. This is not
+currently practical because change entries commonly apply to
+multiple versions.
 
 ## Overview
 
@@ -59,13 +63,8 @@ At this point `CHANGES.yml` becomes the official source of changes and
 ## Process for astropy core contributors
 
 The goal is that the instructions in the `CHANGES.yml` file are clear and self-contained,
-and that merge conflicts will be avoided by always placing new change entries at the
-bottom of the file.
-
-If merge conflicts are still a problem, one can imagine hacky things like dividing the
-change entries into 100 sections based on the last two digits of the PR number.  Then
-you tell the contributor to put their new entry into the correct section, so that
-merge conflicts will be extremely unlikely.
+and that merge conflicts will be avoided by placing new change entries at a quasi-random
+location within the file.
 
 ## Example files
 
