@@ -5,7 +5,6 @@ import argparse
 import re
 from collections import defaultdict
 from pathlib import Path
-from pprint import pprint
 
 import yaml
 
@@ -77,9 +76,6 @@ def get_options(args=None):
                         help="Output file")
     parser.add_argument("--line-width",
                         help="Reformat output to line width (default=no reformatting)")
-    parser.add_argument("--max-entries",
-                        type=int,
-                        help="Max number of RST entries to parse (default=None, for debug)")
     parser.add_argument("--print-info",
                         action='store_true',
                         help="Print releases and subpackages")
@@ -110,7 +106,7 @@ def get_entry(config, entry_lines):
     return entry
 
 
-def read_rst(filepath, max_entries=None):
+def read_rst(filepath):
     with open(filepath) as fh:
         lines = fh.readlines()
     lines.append('')
@@ -130,8 +126,6 @@ def read_rst(filepath, max_entries=None):
             else:
                 within_entry = False
                 entries.append(get_entry(config, entry_lines))
-                if max_entries and len(entries) > max_entries:
-                    break
                 entry_lines.clear()
 
         elif re.match(r'[\^]+\s*$', line_next):
@@ -309,7 +303,7 @@ if __name__ == '__main__':
     # Input entries from either RST or YAML. The RST pathway is mostly for initial
     # testing and conversion of the legacy CHANGES.RST.
     if infile.suffix == '.rst':
-        entries, release_dates = read_rst(infile, opt.max_entries)
+        entries, release_dates = read_rst(infile)
     elif infile.suffix == '.yml':
         entries, release_dates = read_yaml(infile)
     else:
@@ -323,7 +317,6 @@ if __name__ == '__main__':
         write_yaml(entries, release_dates, outfile, opt.line_width)
 
     if opt.print_info:
-        print(releases)
         uniques = get_uniques(entries)
         for key in ('subpackages', 'releases', 'entry_types'):
             vals = uniques[key]
