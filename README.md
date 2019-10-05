@@ -10,7 +10,7 @@ smooth compatibility with the current `CHANGES.rst` as a source for
 users and developers to understand astropy changes.  
 
 **However**, once
-we have transitioned to a YAML structured representation then there 
+we have transitioned to a YAML structured representation then there
 are numerous possibilities for using this far more effectively and
 providing much better ways to present and discover this information.
 One simple idea is to break up the output RST file by version, e.g.
@@ -73,4 +73,5 @@ chopped down version of the astropy changelog as `changes_test.rst`.  From there
 ```
 ./convert_changelog.py changes_test.rst changes_test.yml
 ./convert_changelog.py changes_test.yml changes_test_new.rst
+./convert_changelog.py --line-width=80 changes_test.yml changes_test_new-80.rst
 ```

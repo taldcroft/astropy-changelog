@@ -5,7 +5,7 @@ import argparse
 import re
 from collections import defaultdict
 from pathlib import Path
-from pprint import pprint
+import textwrap
 
 import yaml
 
@@ -55,6 +55,46 @@ SUBPACKAGES = [
     'astropy.visualization',
     'astropy.wcs']
 
+INSTRUCTIONS = """\
+In order to add an entry to the astropy changelog, copy the template entry
+(which immediately follows the --- below this text) to a quasi-random location
+of this file (NOT the top or bottom).  The fill in each of the values:
+
+entry_types: determine which of the types in the template apply to this change.
+This maybe be just one or multiple, for instance "New Features" and
+"Bug Fixes" are common. Enter the one or more types verbatim from the
+template list, separated by comma.
+
+pull_requests: enter one or more pull request numbers that relate to the change,
+separated a comma.
+
+releases: enter one or more releases where this change should be included.
+Pure bug fixes may be backported to the current stable and LTS releases.
+Enter the applicable release from the milestone list that can be found
+at https://github.com/astropy/astropy/milestones.
+
+subpackages: enter one or more astropy subpackages that are impacted by this
+change, separated by a comma.  Available subpackages are:
+  config, constants, convolution, coordinates, cosmology, io.ascii, io.fits,
+  io.misc, io.registry, io.votable, logger, modeling, nddata, samp, stats,
+  table, tests, time, timeseries, uncertainty, units, utils, visualization, wcs
+
+text: Enter description of the update here, maintaining the example indentation
+of two spaces before the text.  Use the past tense, for instance
+"Added a new method ``Table.cstack()`` for column-wise stacking". Enclose
+literals in double-back ticks as shown.
+"""
+
+ENTRY_TEMPLATE = {
+    'entry_types': ENTRY_TYPES,
+    'pull_requests': [],
+    'releases': [],
+    'subpackages': [],
+    'text': ('Enter description of the update here, maintaining the example indentation\n'
+             'of two spaces before the text.  Use the past tense, for instance\n'
+             '"Added a new method ``Table.cstack()`` for column-wise stacking."')
+}
+
 yaml.Dumper.ignore_aliases = lambda *args: True
 
 
@@ -76,10 +116,8 @@ def get_options(args=None):
     parser.add_argument("outfile",
                         help="Output file")
     parser.add_argument("--line-width",
-                        help="Reformat output to line width (default=no reformatting)")
-    parser.add_argument("--max-entries",
                         type=int,
-                        help="Max number of RST entries to parse (default=None, for debug)")
+                        help="Wrap RST output to line width (default=no reformatting)")
     parser.add_argument("--print-info",
                         action='store_true',
                         help="Print releases and subpackages")
@@ -110,7 +148,7 @@ def get_entry(config, entry_lines):
     return entry
 
 
-def read_rst(filepath, max_entries=None):
+def read_rst(filepath):
     with open(filepath) as fh:
         lines = fh.readlines()
     lines.append('')
@@ -130,8 +168,6 @@ def read_rst(filepath, max_entries=None):
             else:
                 within_entry = False
                 entries.append(get_entry(config, entry_lines))
-                if max_entries and len(entries) > max_entries:
-                    break
                 entry_lines.clear()
 
         elif re.match(r'[\^]+\s*$', line_next):
@@ -177,7 +213,7 @@ def rst_header(text, section_char):
     return out
 
 
-def write_rst(entries, filepath, release_dates):
+def write_rst(entries, filepath, release_dates, line_width):
     out = {}
     for entry in entries:
         text = entry['text']
@@ -219,25 +255,29 @@ def write_rst(entries, filepath, release_dates):
                     subpackage_text = subpackage
                 lines.extend(rst_header(subpackage_text, '^'))
                 for text in out[release][entry_type][subpackage]:
-                    for ii, text_line in enumerate(text.splitlines()):
-                        hdr = '- ' if ii == 0 else '  '
-                        lines.append(hdr + text_line)
+                    if line_width is not None:
+                        lines.extend(textwrap.wrap(
+                            text, line_width, initial_indent='- ', subsequent_indent='  '))
+                    else:
+                        for ii, text_line in enumerate(text.splitlines()):
+                            hdr = '- ' if ii == 0 else '  '
+                            lines.append(hdr + text_line)
                     lines.append('')
 
     with open(filepath, 'w') as fh:
         fh.writelines(line + os.linesep for line in lines)
 
 
-def write_yaml(entries, release_dates, filepath, line_width):
-    if line_width is None:
-        line_width = 100
-
-    template = get_template()
-    instructions = get_instructions()
+def write_yaml(entries, release_dates, filepath):
+    template = [ENTRY_TEMPLATE]
+    instructions = {'INSTRUCTIONS FOR ADDING A CHANGE LOG ENTRY': INSTRUCTIONS}
     release_dates = {'RELEASE_DATES': release_dates}
 
     with open(filepath, 'w') as fh:
-        yaml.dump_all([instructions, template, release_dates, entries], fh, width=line_width)
+        documents = [instructions, template, release_dates, entries]
+        # Write YAML with a wide output. This is not meant for human-readability
+        # so we don't care about width.
+        yaml.dump_all(documents, fh, width=200)
 
 
 def get_uniques(entries):
@@ -252,52 +292,6 @@ def get_uniques(entries):
     return uniques
 
 
-def get_template():
-    out = {'entry_types': ENTRY_TYPES,
-           'pull_requests': [],
-           'releases': [],
-           'subpackages': [],
-           'text': ('Enter description of the update here, maintaining the example indentation\n'
-                    'of two spaces before the text.  Use the present tense, for instance\n'
-                    '"Add a new method ``Table.cstack()`` for column-wise stacking."')
-           }
-    return out
-
-
-def get_instructions():
-    text = """\
-In order to add an entry to the astropy changelog, copy the template entry
-(which immediately follows the --- below this text) to the BOTTOM of this
-file.  The fill in each of the values:
-
-entry_types: determine which of the types in the template apply to this change.
-    This maybe be just one or multiple, for instance "New Features" and
-    "Bug Fixes" are common. Enter the one or more types verbatim from the
-    template list, separated by comma.
-
-pull_requests: enter one or more pull request numbers that relate to the change,
-    separated a comma.
-
-releases: enter one or more releases where this change should be included.
-    Pure bug fixes may be backported to the current stable and LTS releases.
-    Enter the applicable release from the milestone list that can be found
-    at https://github.com/astropy/astropy/milestones.
-
-subpackages: enter one or more astropy subpackages that are impacted by this
-    change, separated by a comma.  Available subpackages are:
-      config, constants, convolution, coordinates, cosmology, io.ascii, io.fits,
-      io.misc, io.registry, io.votable, logger, modeling, nddata, samp, stats,
-      table, tests, time, timeseries, uncertainty, units, utils, visualization, wcs
-
-text: Enter description of the update here, maintaining the example indentation
-    of two spaces before the text.  Use the present tense, for instance
-    "Add a new method ``Table.cstack()`` for column-wise stacking". Enclose
-    literals in double-back ticks as shown.
-"""
-    out = {'INSTRUCTIONS FOR ADDING A CHANGE LOG ENTRY': text}
-    return out
-
-
 if __name__ == '__main__':
     opt = get_options()
     infile = Path(opt.infile)
@@ -309,7 +303,7 @@ if __name__ == '__main__':
     # Input entries from either RST or YAML. The RST pathway is mostly for initial
     # testing and conversion of the legacy CHANGES.RST.
     if infile.suffix == '.rst':
-        entries, release_dates = read_rst(infile, opt.max_entries)
+        entries, release_dates = read_rst(infile)
     elif infile.suffix == '.yml':
         entries, release_dates = read_yaml(infile)
     else:
@@ -318,12 +312,11 @@ if __name__ == '__main__':
     # Output entries to either RST or YAML.  The YAML pathway is mostly for initial
     # testing and conversion of the legacy CHANGES.RST.
     if outfile.suffix == '.rst':
-        write_rst(entries, outfile, release_dates)
+        write_rst(entries, outfile, release_dates, opt.line_width)
     elif outfile.suffix == '.yml':
-        write_yaml(entries, release_dates, outfile, opt.line_width)
+        write_yaml(entries, release_dates, outfile)
 
     if opt.print_info:
-        print(releases)
         uniques = get_uniques(entries)
         for key in ('subpackages', 'releases', 'entry_types'):
             vals = uniques[key]
