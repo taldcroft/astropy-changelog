@@ -5,6 +5,7 @@ import argparse
 import re
 from collections import defaultdict
 from pathlib import Path
+import textwrap
 
 import yaml
 
@@ -115,7 +116,8 @@ def get_options(args=None):
     parser.add_argument("outfile",
                         help="Output file")
     parser.add_argument("--line-width",
-                        help="Reformat output to line width (default=no reformatting)")
+                        type=int,
+                        help="Wrap RST output to line width (default=no reformatting)")
     parser.add_argument("--print-info",
                         action='store_true',
                         help="Print releases and subpackages")
@@ -211,7 +213,7 @@ def rst_header(text, section_char):
     return out
 
 
-def write_rst(entries, filepath, release_dates):
+def write_rst(entries, filepath, release_dates, line_width):
     out = {}
     for entry in entries:
         text = entry['text']
@@ -253,26 +255,29 @@ def write_rst(entries, filepath, release_dates):
                     subpackage_text = subpackage
                 lines.extend(rst_header(subpackage_text, '^'))
                 for text in out[release][entry_type][subpackage]:
-                    for ii, text_line in enumerate(text.splitlines()):
-                        hdr = '- ' if ii == 0 else '  '
-                        lines.append(hdr + text_line)
+                    if line_width is not None:
+                        lines.extend(textwrap.wrap(
+                            text, line_width, initial_indent='- ', subsequent_indent='  '))
+                    else:
+                        for ii, text_line in enumerate(text.splitlines()):
+                            hdr = '- ' if ii == 0 else '  '
+                            lines.append(hdr + text_line)
                     lines.append('')
 
     with open(filepath, 'w') as fh:
         fh.writelines(line + os.linesep for line in lines)
 
 
-def write_yaml(entries, release_dates, filepath, line_width):
-    if line_width is None:
-        line_width = 100
-
+def write_yaml(entries, release_dates, filepath):
     template = [ENTRY_TEMPLATE]
     instructions = {'INSTRUCTIONS FOR ADDING A CHANGE LOG ENTRY': INSTRUCTIONS}
     release_dates = {'RELEASE_DATES': release_dates}
 
     with open(filepath, 'w') as fh:
         documents = [instructions, template, release_dates, entries]
-        yaml.dump_all(documents, fh, width=line_width)
+        # Write YAML with a wide output. This is not meant for human-readability
+        # so we don't care about width.
+        yaml.dump_all(documents, fh, width=200)
 
 
 def get_uniques(entries):
@@ -307,9 +312,9 @@ if __name__ == '__main__':
     # Output entries to either RST or YAML.  The YAML pathway is mostly for initial
     # testing and conversion of the legacy CHANGES.RST.
     if outfile.suffix == '.rst':
-        write_rst(entries, outfile, release_dates)
+        write_rst(entries, outfile, release_dates, opt.line_width)
     elif outfile.suffix == '.yml':
-        write_yaml(entries, release_dates, outfile, opt.line_width)
+        write_yaml(entries, release_dates, outfile)
 
     if opt.print_info:
         uniques = get_uniques(entries)
