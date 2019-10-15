@@ -1,15 +1,16 @@
 INSTRUCTIONS FOR ADDING A CHANGE LOG ENTRY: |
   In order to add an entry to the astropy changelog, copy the template entry
   (which immediately follows the --- below this text) to a quasi-random location
-  of this file (NOT the top or bottom).  The fill in each of the values:
+  of this file (NOT the top or bottom to avoid merge conflicts).
+  Then, fill in each of the values:
 
   entry_types: determine which of the types in the template apply to this change.
-  This maybe be just one or multiple, for instance "New Features" and
+  This may be one or multiple entries, for instance "New Features" and
   "Bug Fixes" are common. Enter the one or more types verbatim from the
   template list, separated by comma.
 
   pull_requests: enter one or more pull request numbers that relate to the change,
-  separated a comma.
+  separated by a comma.
 
   releases: enter one or more releases where this change should be included.
   Pure bug fixes may be backported to the current stable and LTS releases.
